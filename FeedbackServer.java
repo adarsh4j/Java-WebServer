@@ -20,6 +20,28 @@ public class FeedbackServer {
             os.close();
         });
 
+        server.createContext("/feedback", exchange -> {
+    if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+        exchange.sendResponseHeaders(204, -1);
+        return;
+    }
+
+    if ("GET".equals(exchange.getRequestMethod())) {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
+
+        String json = getFeedbackAsJson(); // Get DB results as JSON string
+        exchange.sendResponseHeaders(200, json.getBytes().length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(json.getBytes());
+        os.close();
+    }
+});
+
+
         // Server CSS
         server.createContext("/form.css", exchange -> {
             File cssFile = new File("form.css");
@@ -50,19 +72,46 @@ public class FeedbackServer {
                     Connection conn = DriverManager.getConnection(
                         "jdbc:mysql://localhost:3306/feedbackdb", "root", "passw06d"
                     );
-                    PreparedStatement stmt = conn.prepareStatement(
-                        "INSERT INTO feedback (name, message) VALUES (?, ?)"
+                  PreparedStatement stmt = conn.prepareStatement(
+                      "INSERT INTO feedback (name, message, course, rating) VALUES (?, ?, ?, ?)"
                     );
-                    stmt.setString(1, data.get("name"));
-                    stmt.setString(2, data.get("message"));
-                    stmt.executeUpdate();
-                    conn.close();
+                   stmt.setString(1, data.get("name"));
+                   stmt.setString(2, data.get("message"));
+                   stmt.setString(3, data.get("course"));
+                   stmt.setInt(4, Integer.parseInt(data.get("rating")));
+
+                   stmt.executeUpdate();
+                   conn.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
                 // Response
-                String response = "<h1>Thank you!</h1>";
+String response = """
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Thank You</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f4f8;
+    }
+    h1 {
+      color:rgb(20, 132, 245);
+    }
+  </style>
+</head>
+<body>
+  <h1>Thank you for your feedback!</h1>
+</body>
+</html>
+""";
                 exchange.sendResponseHeaders(200, response.length());
                 OutputStream os = exchange.getResponseBody();
                 os.write(response.getBytes());
@@ -75,7 +124,39 @@ public class FeedbackServer {
         System.out.println("Server started at http://localhost:8080");
     }
 
-    // Helper method to parse form data
+    private static String getFeedbackAsJson() {
+    StringBuilder json = new StringBuilder("[");
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        Connection conn = DriverManager.getConnection(
+            "jdbc:mysql://localhost:3306/feedbackdb", "root", "passw06d"
+        );
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT name, message, course, rating FROM feedback");
+
+        boolean first = true;
+        while (rs.next()) {
+            if (!first) json.append(",");
+            json.append("{");
+            json.append("\"name\":\"").append(rs.getString("name")).append("\",");
+            json.append("\"message\":\"").append(rs.getString("message")).append("\",");
+            json.append("\"course\":\"").append(rs.getString("course")).append("\",");
+            json.append("\"rating\":").append(rs.getInt("rating"));
+            json.append("}");
+            first = false;
+        }
+
+        conn.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    json.append("]");
+    return json.toString();
+}
+
+
+    // Method to parse form data
     private static Map<String, String> parseForm(String formData) throws UnsupportedEncodingException {
         Map<String, String> map = new HashMap<>();
         String[] pairs = formData.split("&");

@@ -6,6 +6,7 @@ body {
   flex-direction: column;
   align-items: center;
   height: 100vh;
+  overflow: hidden ;
 }
 
 h2 {
@@ -18,6 +19,7 @@ form {
   padding: 20px 30px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 330px;
 }
 
 input[type="text"],
@@ -40,6 +42,23 @@ input[type="submit"] {
   border-radius: 5px;
   cursor: pointer;
 }
+
+input[type="radio"] {
+  margin-right: 3px;
+}
+
+input[type="radio"][value="3"] {
+  accent-color: green;
+}
+
+input[type="radio"][value="2"] {
+  accent-color: orange; 
+}
+
+input[type="radio"][value="1"] {
+  accent-color: red;
+}
+
 
 input[type="submit"]:hover {
   background-color: #0056b3;

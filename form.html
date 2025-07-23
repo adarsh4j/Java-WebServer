@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head><title>Feedback</title></head>
-<link rel="stylesheet" href="form.css">
-<body>
+  <head>
+    <title>Feedback</title>
+  </head>
+  <link rel="stylesheet" href="form.css" />
+  <body>
     <h2>Feedback Form</h2>
-  <form method="POST" action="/submit">
-    Name: <input type="text" name="name"><br>
-    Feedback: <textarea name="message"></textarea><br>
-    <input type="submit" value="Send">
-  </form>
-</body>
+    <form method="POST" action="/submit">
+      Name: <input type="text" name="name" /><br />
+      Feedback: <textarea name="message"></textarea><br />
+      Course: <input type="text" name="course" /><br />
+      Rating:<br> <br>
+      <label> <input type="radio" name="rating" value="3" /> Good </label>
+      <label> <input type="radio" name="rating" value="2" /> Average </label>
+      <label> <input type="radio" name="rating" value="1" /> Bad </label>
+      <br /> <br>
+      <input type="submit" value="Send" />
+    </form>
+  </body>
 </html>
